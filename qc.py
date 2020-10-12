@@ -6,6 +6,18 @@ import numpy as np
 import nltk
 
 #-----------------------------------------------------------------
+# Preprocesses a line 
+#-----------------------------------------------------------------
+def preprocess_line(line):
+    # Lowercasing the entire line
+    processed_line = line.lower()
+    # Remove punctuation using regex
+    processed_line = re.sub('[?!\.,;:`\']','',processed_line)
+
+
+    return processed_line
+
+#-----------------------------------------------------------------
 # Preprocesses all the sentences in a file 
 #-----------------------------------------------------------------
 def preprocess_file(file_name):
@@ -13,19 +25,16 @@ def preprocess_file(file_name):
     f_lines = nltk.sent_tokenize(f.read())
     processed_lines = []
 
-    # Lowercasing the entire line
-    processed_lines = [line.lower() for line in f_lines]
-
-    # Remove punctuation using regex
+    for line in f_lines:
+        processed_lines += [preprocess_line(line),]
     
-
     print(processed_lines)
     return
 
 #--------------------------------------------------------------------------------------------
 # Function that splits file_name.txt into file_name-questions.txt and file_name-labels.txt
 #--------------------------------------------------------------------------------------------
-def split_dev_file(file_name):
+def split_file(file_name):
     dev_set = open('{}.txt'.format(file_name), 'r')
     dev_set_lines = dev_set.readlines()
     dev_set.close()
@@ -45,7 +54,7 @@ def main():
     case = sys.argv[1]
 
     if case == '-setup':
-        split_dev_file('DEV')
+        split_file('DEV')
     elif case == '-coarse':
         return
     elif case == '-fine':
