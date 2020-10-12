@@ -26,8 +26,8 @@ stop_words_nltk_list = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselv
 
 # TODO: Choose which stopwords we want to actually remove
 stop_words = []
-
 training_data = {}
+index_training_data = {} 
 
 #-----------------------------------------------------------------
 # Stemming and/or Lemmatization of a line 
@@ -124,18 +124,28 @@ def read_training_data(file_name):
         
         # Setting up our training data dictory to store our results
         global training_data
+        global index_training_data
         if label[0] not in training_data:
-            training_data[label[0]] = {} 
+            training_data[label[0]] = {}
+            index_training_data[label[0]] = {}
+            # create tf-idf
+            index_training_data[label[0]]['tf-idf'] = None
          
         if label[1] not in training_data[label[0]]:
-            training_data[label[0]][label[1]] = [] 
+            training_data[label[0]][label[1]] = []
+            # create tf-idf
+            index_training_data[label[0]][label[1]] = None
+            
 
         # TODO TODO TODO: Process the line and retrive information
+        
         p_line = phrase
 
         training_data[label[0]][label[1]] += [p_line, ]
 
+    print(index_training_data)
     return
+
 
 #--------------------------
 # Project main function
@@ -154,7 +164,7 @@ def main():
 
             if case == '-coarse':
                 return
-                
+
             elif case == '-fine':
                 return
 
