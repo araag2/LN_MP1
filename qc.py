@@ -30,6 +30,23 @@ stop_words = []
 training_data = {}
 
 #-----------------------------------------------------------------
+# Stemming and/or Lemmatization of a line 
+#-----------------------------------------------------------------
+def stem_lem(line):
+    # Uncomment if necessary
+    #nltk.download('wordnet')
+
+    # TODO: Check type of Stemmer 
+    # stemmer = nltk.stem.snowball.EnglishStemmer()
+    # p_line = [stemmer.stem(word) for word in line]
+
+    # Lemmer  
+    lemmer = nltk.WordNetLemmatizer()
+    p_line = [lemmer.lemmatize(word) for word in line]
+
+    return p_line
+
+#-----------------------------------------------------------------
 # Preprocesses a line 
 #-----------------------------------------------------------------
 def preprocess_line(line):
@@ -51,6 +68,12 @@ def preprocess_line(line):
     # Tokenization 
     p_line = nltk.word_tokenize(p_line)   
 
+    # TODO: ? Fix spelling mistakes
+
+    # TODO: Check this
+    # Stemmerization and Lemmatization
+    p_line = stem_lem(p_line)
+
     return p_line
 
 #-----------------------------------------------------------------
@@ -58,6 +81,7 @@ def preprocess_line(line):
 #-----------------------------------------------------------------
 def preprocess_file(file_name):
     f = open(file_name, 'r')
+
     # We had to use this because there are double interrogation questions sometimes, 
     # and nltk.sent_tokenize() would split them into different lines
     f_lines = f.read().split('\n')
@@ -98,15 +122,16 @@ def read_training_data(file_name):
         label = split_line[0].split(':')
         phrase = split_line[1].strip()
         
-        # TODO TODO TODO: Process the line and retrive information
-        p_line = phrase
-
+        # Setting up our training data dictory to store our results
         global training_data
         if label[0] not in training_data:
             training_data[label[0]] = {} 
          
         if label[1] not in training_data[label[0]]:
             training_data[label[0]][label[1]] = [] 
+
+        # TODO TODO TODO: Process the line and retrive information
+        p_line = phrase
 
         training_data[label[0]][label[1]] += [p_line, ]
 
@@ -118,20 +143,26 @@ def read_training_data(file_name):
 def main():
     case = sys.argv[1]
 
-    if case == '-setup':
+    if case == '-setup' or case == '-coarse' or case == '-fine':
         file_name = sys.argv[2]
-        split_file(file_name)
+        if case == '-setup':
+            split_file(file_name)
 
-    elif case == '-coarse' or case == '-fine':
-        file_name = sys.argv[2]
-        read_training_data(file_name)
+        elif case == '-coarse' or case == '-fine':
+            dev_set_name = sys.argv[3]
+            read_training_data(file_name)
+
+            if case == '-coarse':
+                return
+                
+            elif case == '-fine':
+                return
 
     elif case == '-test':
         preprocess_file('DEV-questions.txt')
 
     elif case == '-help':
         help_menu()
-
     else:
         print("Invalid Input")
 
