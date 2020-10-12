@@ -4,27 +4,30 @@ import sys
 import sklearn as skl
 import numpy as np
 import nltk
-from nltk.corpus import stopwords
 
-# Variables
+#-----------------------------------------------------------------
+# Global Variable Field 
+#-----------------------------------------------------------------
+
+# Stop words list from nltk for the English language
+stop_words_nltk_list = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", 
+"you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', "she's", 
+'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 
+'which', 'who', 'whom', 'this', 'that', "that'll", 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 
+'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 
+'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 
+'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 
+'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 
+'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 
+'can', 'will', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', 
+"aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't", 
+'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan', "shan't", 'shouldn', "shouldn't", 
+'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"]
+
+# TODO: Choose which stopwords we want to actually remove
 stop_words = []
 
 training_data = {}
-
-#-----------------------------------------------------------------
-# Creates our stop words list
-#-----------------------------------------------------------------
-
-def create_stop_words():
-    # If necessary uncoment this
-    # nltk.download('stopwords')
-    nltk_stop_words = stopwords.words('english')
-
-    # TODO: Check How/What/Why/When because they convey meaning
-    global stop_words 
-    stop_words = nltk_stop_words
-
-    return stop_words
 
 #-----------------------------------------------------------------
 # Preprocesses a line 
@@ -48,7 +51,6 @@ def preprocess_line(line):
     # Tokenization 
     p_line = nltk.word_tokenize(p_line)   
 
-    print(p_line)
     return p_line
 
 #-----------------------------------------------------------------
@@ -65,7 +67,6 @@ def preprocess_file(file_name):
     for line in f_lines:
         processed_lines += [preprocess_line(line),]
     
-
     return
 
 #--------------------------------------------------------------------------------------------
@@ -116,20 +117,35 @@ def read_training_data(file_name):
 #--------------------------
 def main():
     case = sys.argv[1]
-    file_name = sys.argv[2]
-
-    create_stop_words()
 
     if case == '-setup':
+        file_name = sys.argv[2]
         split_file(file_name)
+
     elif case == '-coarse' or case == '-fine':
+        file_name = sys.argv[2]
         read_training_data(file_name)
 
     elif case == '-test':
         preprocess_file('DEV-questions.txt')
+
+    elif case == '-help':
+        help_menu()
+
     else:
         print("Invalid Input")
 
     return
+
+#--------------------------
+# Help Trace
+#--------------------------
+
+def help_menu():
+    print('Help trace for program qc.py')
+    print('---')
+    print('Usage Commands:')
+    print('-setup \'name\': Splits a data \'name\'.txt on the current directory into \'name\'-questions.txt and \'name\'-labels.txt')
+    return 
 
 main()
