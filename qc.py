@@ -4,31 +4,68 @@ import sys
 import sklearn as skl
 import numpy as np
 import nltk
+from nltk.corpus import stopwords
+
+# Variables
+stop_words = []
+
+training_data = {}
+
+#-----------------------------------------------------------------
+# Creates our stop words list
+#-----------------------------------------------------------------
+
+def create_stop_words():
+    # If necessary uncoment this
+    # nltk.download('stopwords')
+    nltk_stop_words = stopwords.words('english')
+
+    # TODO: Check How/What/Why/When because they convey meaning
+    global stop_words 
+    stop_words = nltk_stop_words
+
+    return stop_words
 
 #-----------------------------------------------------------------
 # Preprocesses a line 
 #-----------------------------------------------------------------
 def preprocess_line(line):
     # Lowercasing the entire line
-    processed_line = line.lower()
+    p_line = line.lower()
+    
+    # Remove stop words (we Tokenize implicity to make it easier)
+    for word in nltk.word_tokenize(p_line):
+        if word in stop_words:
+            p_line = re.sub('{}\s'.format(word),'', p_line)
+
     # Remove punctuation using regex
-    processed_line = re.sub('[?!\.,;:`\']','',processed_line)
+    p_line = re.sub('[?!\.,;:`\']','',  p_line)
 
+    # TODO: Check this remove the end of 's. The ownership relation it conveys
+    # might be worthwhile to keep. 
+    p_line = re.sub('\ss\s',' ',  p_line)
 
-    return processed_line
+    # Tokenization 
+    p_line = nltk.word_tokenize(p_line)   
+
+    print(p_line)
+    return p_line
 
 #-----------------------------------------------------------------
 # Preprocesses all the sentences in a file 
 #-----------------------------------------------------------------
 def preprocess_file(file_name):
     f = open(file_name, 'r')
-    f_lines = nltk.sent_tokenize(f.read())
+    # We had to use this because there are double interrogation questions sometimes, 
+    # and nltk.sent_tokenize() would split them into different lines
+    f_lines = f.read().split('\n')
+
     processed_lines = []
 
     for line in f_lines:
         processed_lines += [preprocess_line(line),]
     
-    print(processed_lines)
+
     return
 
 #--------------------------------------------------------------------------------------------
@@ -47,18 +84,47 @@ def split_file(file_name):
 
     return
 
+#--------------------------------------------------------------------------------------------
+# Function that reads our Training Data
+#--------------------------------------------------------------------------------------------
+def read_training_data(file_name):
+    train_set = open('{}'.format(file_name), 'r')
+    train_set_lines = train_set.readlines()
+    train_set.close()
+
+    for line in train_set_lines:
+        split_line = line.split(' ', 1)
+        label = split_line[0].split(':')
+        phrase = split_line[1].strip()
+        
+        # TODO TODO TODO: Process the line and retrive information
+        p_line = phrase
+
+        global training_data
+        if label[0] not in training_data:
+            training_data[label[0]] = {} 
+         
+        if label[1] not in training_data[label[0]]:
+            training_data[label[0]][label[1]] = [] 
+
+        training_data[label[0]][label[1]] += [p_line, ]
+
+    return
+
 #--------------------------
 # Project main function
 #--------------------------
 def main():
     case = sys.argv[1]
+    file_name = sys.argv[2]
+
+    create_stop_words()
 
     if case == '-setup':
-        split_file('DEV')
-    elif case == '-coarse':
-        return
-    elif case == '-fine':
-        return
+        split_file(file_name)
+    elif case == '-coarse' or case == '-fine':
+        read_training_data(file_name)
+
     elif case == '-test':
         preprocess_file('DEV-questions.txt')
     else:
