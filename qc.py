@@ -3,6 +3,7 @@ import re
 import sys
 import statistics
 import sklearn as skl
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
@@ -29,8 +30,9 @@ stop_words_nltk_list = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselv
 
 # TODO: Choose which stopwords we want to actually remove
 stop_words = []
-train_data = {}
-ind_train_data = {} 
+
+train_vectorizer = None
+train_classifier = None
 
 #-----------------------------------------------------------------
 # Stemming and/or Lemmatization of a line 
@@ -75,7 +77,7 @@ def preprocess_line(line):
 
     # TODO: Check this
     # Stemmerization and Lemmatization
-    # p_line = stem_lem(p_line)
+    p_line = stem_lem(p_line)
 
     return p_line
 
@@ -130,74 +132,56 @@ def create_index():
 #--------------------------------------------------------------------------------------------
 # Function that reads our Training Data
 #--------------------------------------------------------------------------------------------
-def read_train_data(file_name):
+def read_train_data(file_name, coarse):
     train_set = open('{}'.format(file_name), 'r')
     train_set_lines = train_set.readlines()
     train_set.close()
 
+    p_train_set = []
+    train_set_labels = []
+
     for line in train_set_lines:
         split_line = line.split(' ', 1)
-        label = split_line[0].split(':')
-        phrase = split_line[1].strip()
-        
-        # Setting up our training data dictory to store our results
-        global train_data
-        global ind_train_data
-        if label[0] not in train_data:
-            train_data[label[0]] = {}
-            train_data[label[0]]['corpus'] = []
-            ind_train_data[label[0]] = {}
+        label = split_line[0]
 
-            # create tf-idf
-            ind_train_data[label[0]]['vectorizer'] = create_index()
-            ind_train_data[label[0]]['matrix'] = None
-         
-        if label[1] not in train_data[label[0]]:
-            train_data[label[0]][label[1]] = []
-            # create tf-idf
-            ind_train_data[label[0]][label[1]] = {}
-            ind_train_data[label[0]][label[1]]['vectorizer'] = create_index()
-            ind_train_data[label[0]][label[1]]['matrix'] = None
+        if coarse:
+            label = split_line[0].split(':')[0].strip()
             
+        phrase = split_line[1].strip()
 
         # TODO TODO TODO: Process the line and retrive information
         p_line = preprocess_line(phrase)
-        document = flatten_list(p_line)
+        p_train_set += [flatten_list(p_line),]
+        train_set_labels += [label,]
 
-        train_data[label[0]][label[1]] += [document, ]
-        train_data[label[0]]['corpus'] += [document, ]
+    global train_vectorizer
+    global train_classifier
+    train_vectorizer = TfidfVectorizer()
+    vec_data = train_vectorizer.fit_transform(p_train_set)
 
-    for c_label in ind_train_data:
-        ind_train_data[c_label]['matrix'] = ind_train_data[c_label]['vectorizer'].fit_transform(train_data[c_label]['corpus'])    
-        for f_label in ind_train_data[c_label]:
-            if f_label != 'matrix' and f_label != 'vectorizer':
-                ind_train_data[c_label][f_label]['matrix'] = ind_train_data[c_label][f_label]['vectorizer'].fit_transform(train_data[c_label][f_label])
+    train_classifier = RandomForestClassifier(n_estimators=200, max_depth=25, random_state=0)
+    train_classifier.fit(vec_data, train_set_labels)
 
 #--------------------------------------------------------------------------------------------
 # Function that generates course labels for each document
 #--------------------------------------------------------------------------------------------
+
 def generate_c_label(file_name):
     dev_set = open('{}'.format(file_name), 'r')
     dev_set_lines = dev_set.readlines()
     dev_set.close()
 
+    global train_vectorizer
+    global train_classifier
+
     for line in dev_set_lines:
         p_line = [flatten_list(preprocess_line(line.strip()))]
 
-        max_label = -1
-        best_label = ''
-        for c_label in ind_train_data:
-            p_line_matrix = ind_train_data[c_label]['vectorizer'].transform(p_line)
-            sim = cosine_similarity(p_line_matrix, ind_train_data[c_label]['matrix'])
-
-            max_sim = max(sim[0]) 
-            if max_sim > max_label:
-                max_label = max_sim
-                best_label = c_label
-        print(best_label)
+        test_array = train_vectorizer.transform(p_line)
+        prediction = str(train_classifier.predict(test_array))
+        print(re.sub('[\[\'\]]','', prediction).rstrip())
 
     return
-
 #--------------------------
 # Project main function
 #--------------------------
@@ -211,13 +195,14 @@ def main():
 
         elif case == '-coarse' or case == '-fine':
             dev_set_name = sys.argv[3]
-            read_train_data(file_name)
-
+            
             if case == '-coarse':
-                generate_c_label(file_name)
+                read_train_data(file_name,True)
 
             elif case == '-fine':
-                return
+                read_train_data(file_name,False)
+            
+            generate_c_label(dev_set_name)
 
     elif case == '-test':
         preprocess_file('DEV-questions.txt')
