@@ -173,14 +173,17 @@ def generate_c_label(file_name):
 
     global train_vectorizer
     global train_classifier
+    text_output = ''
+
 
     for line in dev_set_lines:
         p_line = [flatten_list(preprocess_line(line.strip()))]
 
         test_array = train_vectorizer.transform(p_line)
         prediction = str(train_classifier.predict(test_array))
-        print(re.sub('[\[\'\]]','', prediction).rstrip())
+        text_output += re.sub('[\[\'\]]','', prediction).rstrip() + '\n'
 
+    print(text_output.rstrip())
     return
 #--------------------------
 # Project main function
