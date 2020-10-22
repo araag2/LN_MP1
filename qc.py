@@ -1,20 +1,20 @@
 import os
 import re
 import sys
+import copy
 import statistics
 import sklearn as skl
-from sklearn.ensemble import RandomForestClassifier
+from sklearn import svm
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import nltk
 
 #-----------------------------------------------------------------
 # Global Variable Field 
 #-----------------------------------------------------------------
-
-# Stop words list from nltk for the English language
-stop_words_nltk_list = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", 
+'''
+NLTK StopWordList
+['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", 
 "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', "she's", 
 'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 
 'which', 'who', 'whom', 'this', 'that', "that'll", 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 
@@ -28,26 +28,80 @@ stop_words_nltk_list = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselv
 'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan', "shan't", 'shouldn', "shouldn't", 
 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"]
 
-# TODO: Choose which stopwords we want to actually remove
-stop_words = []
+Words that never appear:
+['ours', 'ourselves', "you're", "you've", "you'll", "you'd", 'yours', 'yourself', 'yourselves', "she's", 'hers', 'herself', "it's", 
+'theirs', "that'll", 'above', 'below', 'few', "don't", "should've", 'll', 're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 
+"didn't", "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", "haven't", "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 
+"shan't", "shouldn't", "wasn't", 'weren', "weren't", "won't", 'wouldn', "wouldn't"]
+
+Words that appear:
+['where', 'can', 'be', 'what', 'do', 'most', 'is', 'the', 'of', 'for', 'who', 'when', 'did', 'does', 'in', 'to', 'their', 'before', 'how', 
+'a', 'on', 'it', 'why', 'we', 'by', 'an', 'was', 'from', 'her', 'are', 'i', 'you', 'which', 'and', 'has', 'all', 'he', 'during', 'were', 'if', 
+'at', 'have', 'having', 'as', 'not', 'will', 'between', 'its', 'there', 'had', 'more', 'that', 's', 'no', 'should', 'or', 'only', 'himself', 'into', 
+'his', 'each', 'with', 'after', 'so', 'doing', 'now', 'they', 'about', 'your', 'other', 'over', 'under', 'up', 'such', 'don', 'my', 'me', 'won', 'through', 
+'out', 'some', 'just', 'been', 'own', 'am', 'than', 'those', 'because', 'them', 'this', 'our', 'itself', 'these', 'then', 'but', 'while', 'same', 'whom', 'being', 
+'down', 'shan', 'here', 'him', 'off', 'd', 'shouldn', 'she', 'against', 'myself', 'any', 'again', 'very', 't', 'once', 'too', 'themselves', 'wasn', 'nor', 'doesn', 
+'o', 'm', 'haven', 'both', 'didn', 'until', 'further', 'isn']
+'''
+
+'''
+stop_words_coarse = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", 
+"you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', "she's", 
+'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 
+'this', 'that', "that'll", 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 
+'being', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 
+'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'about', 'against', 'between', 'into', 'through', 
+'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 
+'again', 'further', 'then', 'once', 'here', 'there', 'all', 'any', 'both', 'each', 'few', 
+'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 
+'can', 'will', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', 
+"aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't", 
+'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan', "shan't", 'shouldn', "shouldn't", 
+'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"]
+'''
+
+stop_words_coarse = ['i', 'me', 'my', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", 
+"you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'his', 'she', "she's", 
+'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'them', 'their', 'theirs', 'what', 
+"that'll", 'these', 'am', 'is', 'are', 'be', 'been', 
+'has', 'do', 'does', 'did', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 
+'because', 'as', 'until', 'of', 'at', 'by', 'for', 'about', 'against', 'into', 'through', 
+'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 
+'again', 'further', 'then', 'once', 'here', 'all', 'both', 'few', 
+'more', 'other', 'no', 'same', 'so', 'than', 'very', 's', 't', 
+'can', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', 
+"aren't", 'couldn', "couldn't", 'didn', "didn't", "doesn't", "hadn't", 'hasn', "hasn't", "haven't", 
+"isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", "shan't", "shouldn't", 
+"wasn't", 'weren', "weren't", "won't", 'wouldn', "wouldn't"]
+
+
+stop_words_fine = ['ours', 'ourselves', "you're", "you've", "you'll", "you'd", 'yours', 'yourself', 'yourselves', "she's", 'hers', 'herself', "it's", 
+'theirs', "that'll", 'above', 'below', 'few', "don't", "should've", 'll', 're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 
+"didn't", "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", "haven't", "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 
+"shan't", "shouldn't", "wasn't", 'weren', "weren't", "won't", 'wouldn', "wouldn't"]
+
+stop_words_appered = []
+
+coarse = True
 
 train_vectorizer = None
-train_classifier = None
-
+svm_classifier = None
+vec = None
+labels = None
 #-----------------------------------------------------------------
 # Stemming and/or Lemmatization of a line 
 #-----------------------------------------------------------------
 def stem_lem(line):
-    # Uncomment if necessary
-    #nltk.download('wordnet')
+    global coarse
 
-    # TODO: Check type of Stemmer 
-    # stemmer = nltk.stem.snowball.EnglishStemmer()
-    # p_line = [stemmer.stem(word) for word in line]
+    p_line = None
+    if coarse:
+        lemmer = nltk.WordNetLemmatizer()
+        p_line = [lemmer.lemmatize(word) for word in line]
 
-    # Lemmer  
-    lemmer = nltk.WordNetLemmatizer()
-    p_line = [lemmer.lemmatize(word) for word in line]
+    else:
+        stemmer = nltk.stem.snowball.EnglishStemmer()
+        p_line = [stemmer.stem(word) for word in line]
 
     return p_line
 
@@ -55,25 +109,26 @@ def stem_lem(line):
 # Preprocesses a line 
 #-----------------------------------------------------------------
 def preprocess_line(line):
+    global coarse
+    global stop_words_appered
+
     # Lowercasing the entire line
     p_line = line.lower()
     
-    # Remove stop words (we Tokenize implicity to make it easier)
-    for word in nltk.word_tokenize(p_line):
-        if word in stop_words:
-            p_line = re.sub('{}\s'.format(word),'', p_line)
+    if coarse:
+        for word in nltk.word_tokenize(p_line):
+            if word in stop_words_coarse:
+                p_line = re.sub('{}\s'.format(word),'', p_line)
+    else:
+        for word in nltk.word_tokenize(p_line):
+            if word in  stop_words_fine:
+                p_line = re.sub('{}\s'.format(word),'', p_line)
 
     # Remove punctuation using regex
-    p_line = re.sub('[?!\.,;:`\']','',  p_line)
-
-    # TODO: Check this remove the end of 's. The ownership relation it conveys
-    # might be worthwhile to keep. 
-    p_line = re.sub('\ss\s',' ',  p_line)
+    p_line = re.sub('[?!/\.,;:`\']','',  p_line)
 
     # Tokenization 
-    p_line = nltk.word_tokenize(p_line)   
-
-    # TODO: ? Fix spelling mistakes
+    p_line = nltk.word_tokenize(p_line)
 
     # TODO: Check this
     # Stemmerization and Lemmatization
@@ -132,7 +187,9 @@ def create_index():
 #--------------------------------------------------------------------------------------------
 # Function that reads our Training Data
 #--------------------------------------------------------------------------------------------
-def read_train_data(file_name, coarse):
+def read_train_data(file_name):
+    global coarse
+
     train_set = open('{}'.format(file_name), 'r')
     train_set_lines = train_set.readlines()
     train_set.close()
@@ -149,19 +206,92 @@ def read_train_data(file_name, coarse):
             
         phrase = split_line[1].strip()
 
-        # TODO TODO TODO: Process the line and retrive information
+
         p_line = preprocess_line(phrase)
         p_train_set += [flatten_list(p_line),]
         train_set_labels += [label,]
 
     global train_vectorizer
-    global train_classifier
+    global svm_classifier
+    global vec
+    global labels
+
     train_vectorizer = TfidfVectorizer()
     vec_data = train_vectorizer.fit_transform(p_train_set)
 
-    train_classifier = RandomForestClassifier(n_estimators=200, max_depth=25, random_state=0)
-    train_classifier.fit(vec_data, train_set_labels)
+    # Best so far: Coarse [SVC(C=100.0, gamma=1)]
+    # 82.14080% Coarse [SVC(C=70.0, gamma=0.5)]
+    # Best so far: Fine [SVC(C=100.0, gamma=0.1)]
+    # 75.81% [SVC(C=20, gamma=0.4)]
+    # 78.023134% [SVC(C=100, gamma=0.2)]
 
+    if coarse:
+        svm_classifier = svm.SVC(kernel='rbf', C=70.0, gamma=0.5)
+    else:
+        svm_classifier = svm.SVC(kernel='rbf', C=100.0, gamma=0.2)
+
+    svm_classifier.fit(vec_data, train_set_labels)
+
+    vec = vec_data
+    labels = train_set_labels
+
+#--------------------------------------------------------------------------------------------
+# Auxiliary function just to test classifier values
+#--------------------------------------------------------------------------------------------
+#TODO: Remove this afterwards
+def test_classifier_values(dev_set_lines):
+    global vec
+    global labels
+
+    classifiers = []
+    for C in range(5,30,5):
+        for gamma in range(1,11,1):
+            classifiers += [[C, gamma/10], ]
+            print(C, gamma/10)
+
+    sol = open('DEV-labels.txt', 'r')
+    temp_sol_lines = sol.readlines()
+    sol.close()
+
+    sol_lines = []
+
+    for line in temp_sol_lines:
+        p_line = re.sub('[\s\x00\\n]','',line)
+        if p_line != '':
+            sol_lines += [p_line,]
+
+    best_accuracy = 0
+    best_accuracy_measures = None
+
+    for classifier in classifiers:
+        out_lines = []
+        n_labels = 0
+        correct_labels = 0
+        clf = svm.SVC(C=classifier[0], gamma=classifier[1])
+        clf.fit(vec, labels)
+
+        for line in dev_set_lines:
+            p_line = [flatten_list(preprocess_line(line.strip()))]
+            test_array = train_vectorizer.transform(p_line)
+            prediction = str(clf.predict(test_array))
+            out_lines += [re.sub('[\[\'\]]','', prediction).rstrip(),]
+
+        for i in range(len(sol_lines)):
+            if re.sub('[\s\x00]','',out_lines[i]) in str(sol_lines[i]):
+                correct_labels += 1
+            n_labels += 1 
+        accuracy = (correct_labels/n_labels)*100
+        print("Current accuracy {:3f}%".format(accuracy))
+        print("Current measures {}".format([clf]))
+
+        if accuracy >= best_accuracy:
+            best_accuracy = accuracy
+            best_accuracy_measures = [clf]
+
+    print("Best accuracy {:3f}%".format(best_accuracy))
+    print("Best measures {}".format(best_accuracy_measures))
+
+    return
 #--------------------------------------------------------------------------------------------
 # Function that generates course labels for each document
 #--------------------------------------------------------------------------------------------
@@ -172,15 +302,17 @@ def generate_c_label(file_name):
     dev_set.close()
 
     global train_vectorizer
-    global train_classifier
+    global svm_classifier
+
+    #TODO: Remove this afterwards
+    #test_classifier_values(dev_set_lines)
+
     text_output = ''
-
-
     for line in dev_set_lines:
         p_line = [flatten_list(preprocess_line(line.strip()))]
 
         test_array = train_vectorizer.transform(p_line)
-        prediction = str(train_classifier.predict(test_array))
+        prediction = str(svm_classifier.predict(test_array))
         text_output += re.sub('[\[\'\]]','', prediction).rstrip() + '\n'
 
     print(text_output.rstrip())
@@ -191,6 +323,13 @@ def generate_c_label(file_name):
 def main():
     case = sys.argv[1]
 
+    global stop_words_coarse
+    global stop_words_fine
+    global stop_words_coarse_remove
+    global stop_words_fine_remove
+    global stop_words_appered
+    global coarse
+
     if case == '-setup' or case == '-coarse' or case == '-fine':
         file_name = sys.argv[2]
         if case == '-setup':
@@ -200,10 +339,11 @@ def main():
             dev_set_name = sys.argv[3]
             
             if case == '-coarse':
-                read_train_data(file_name,True)
+                read_train_data(file_name)
 
             elif case == '-fine':
-                read_train_data(file_name,False)
+                coarse = False
+                read_train_data(file_name)
             
             generate_c_label(dev_set_name)
 
