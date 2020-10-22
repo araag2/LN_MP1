@@ -44,43 +44,21 @@ Words that appear:
 'o', 'm', 'haven', 'both', 'didn', 'until', 'further', 'isn']
 '''
 
-'''
-stop_words_coarse = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", 
-"you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', "she's", 
-'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 
-'this', 'that', "that'll", 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 
-'being', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 
-'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'about', 'against', 'between', 'into', 'through', 
-'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 
-'again', 'further', 'then', 'once', 'here', 'there', 'all', 'any', 'both', 'each', 'few', 
-'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 
-'can', 'will', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', 
-"aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't", 
-'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan', "shan't", 'shouldn', "shouldn't", 
-'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"]
-'''
-
-stop_words_coarse = ['i', 'me', 'my', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", 
+stop_words_coarse = ['i', 'me', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", 
 "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'his', 'she', "she's", 
 'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'them', 'their', 'theirs', 'what', 
 "that'll", 'these', 'am', 'is', 'are', 'be', 'been', 
-'has', 'do', 'does', 'did', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 
+'has', 'do', 'did', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 
 'because', 'as', 'until', 'of', 'at', 'by', 'for', 'about', 'against', 'into', 'through', 
-'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 
-'again', 'further', 'then', 'once', 'here', 'all', 'both', 'few', 
+'before', 'after', 'above', 'below', 'to', 'from', 'in', 'out', 'on', 'off', 'over', 'under', 
+'again', 'further', 'then', 'once', 'all', 'both', 'few', 
 'more', 'other', 'no', 'same', 'so', 'than', 'very', 's', 't', 
 'can', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', 
 "aren't", 'couldn', "couldn't", 'didn', "didn't", "doesn't", "hadn't", 'hasn', "hasn't", "haven't", 
 "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", "shan't", "shouldn't", 
 "wasn't", 'weren', "weren't", "won't", 'wouldn', "wouldn't"]
 
-
-stop_words_fine = ['ours', 'ourselves', "you're", "you've", "you'll", "you'd", 'yours', 'yourself', 'yourselves', "she's", 'hers', 'herself', "it's", 
-'theirs', "that'll", 'above', 'below', 'few', "don't", "should've", 'll', 're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 
-"didn't", "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", "haven't", "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 
-"shan't", "shouldn't", "wasn't", 'weren', "weren't", "won't", 'wouldn', "wouldn't"]
-
-stop_words_appered = []
+stop_words_fine = []
 
 coarse = True
 
@@ -110,7 +88,6 @@ def stem_lem(line):
 #-----------------------------------------------------------------
 def preprocess_line(line):
     global coarse
-    global stop_words_appered
 
     # Lowercasing the entire line
     p_line = line.lower()
@@ -226,7 +203,7 @@ def read_train_data(file_name):
     # 78.023134% [SVC(C=100, gamma=0.2)]
 
     if coarse:
-        svm_classifier = svm.SVC(kernel='rbf', C=70.0, gamma=0.5)
+        svm_classifier = svm.SVC(kernel='rbf', C=100.0, gamma=1)
     else:
         svm_classifier = svm.SVC(kernel='rbf', C=100.0, gamma=0.2)
 
@@ -244,10 +221,11 @@ def test_classifier_values(dev_set_lines):
     global labels
 
     classifiers = []
-    for C in range(5,30,5):
+    for C in range(70,101,1):
         for gamma in range(1,11,1):
             classifiers += [[C, gamma/10], ]
             print(C, gamma/10)
+
 
     sol = open('DEV-labels.txt', 'r')
     temp_sol_lines = sol.readlines()
