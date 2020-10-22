@@ -27,21 +27,6 @@ NLTK StopWordList
 "aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't", 
 'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan', "shan't", 'shouldn', "shouldn't", 
 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"]
-
-Words that never appear:
-['ours', 'ourselves', "you're", "you've", "you'll", "you'd", 'yours', 'yourself', 'yourselves', "she's", 'hers', 'herself', "it's", 
-'theirs', "that'll", 'above', 'below', 'few', "don't", "should've", 'll', 're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 
-"didn't", "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", "haven't", "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 
-"shan't", "shouldn't", "wasn't", 'weren', "weren't", "won't", 'wouldn', "wouldn't"]
-
-Words that appear:
-['where', 'can', 'be', 'what', 'do', 'most', 'is', 'the', 'of', 'for', 'who', 'when', 'did', 'does', 'in', 'to', 'their', 'before', 'how', 
-'a', 'on', 'it', 'why', 'we', 'by', 'an', 'was', 'from', 'her', 'are', 'i', 'you', 'which', 'and', 'has', 'all', 'he', 'during', 'were', 'if', 
-'at', 'have', 'having', 'as', 'not', 'will', 'between', 'its', 'there', 'had', 'more', 'that', 's', 'no', 'should', 'or', 'only', 'himself', 'into', 
-'his', 'each', 'with', 'after', 'so', 'doing', 'now', 'they', 'about', 'your', 'other', 'over', 'under', 'up', 'such', 'don', 'my', 'me', 'won', 'through', 
-'out', 'some', 'just', 'been', 'own', 'am', 'than', 'those', 'because', 'them', 'this', 'our', 'itself', 'these', 'then', 'but', 'while', 'same', 'whom', 'being', 
-'down', 'shan', 'here', 'him', 'off', 'd', 'shouldn', 'she', 'against', 'myself', 'any', 'again', 'very', 't', 'once', 'too', 'themselves', 'wasn', 'nor', 'doesn', 
-'o', 'm', 'haven', 'both', 'didn', 'until', 'further', 'isn']
 '''
 
 stop_words_coarse = ['i', 'me', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", 
@@ -58,7 +43,10 @@ stop_words_coarse = ['i', 'me', 'we', 'our', 'ours', 'ourselves', 'you', "you're
 "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", "shan't", "shouldn't", 
 "wasn't", 'weren', "weren't", "won't", 'wouldn', "wouldn't"]
 
-stop_words_fine = []
+stop_words_fine = ['ours', 'ourselves', "you're", "you've", "you'll", "you'd", 'yours', 'yourself', 'yourselves', "she's", 'hers', 'herself', "it's", 
+'theirs', "that'll", 'above', 'below', 'few', "don't", "should've", 'll', 're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 
+"didn't", "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", "haven't", "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 
+"shan't", "shouldn't", "wasn't", 'weren', "weren't", "won't", 'wouldn', "wouldn't"]
 
 coarse = True
 
@@ -156,12 +144,6 @@ def flatten_list(l):
     return new_list.strip()
 
 #--------------------------------------------------------------------------------------------
-# Function that creates an empty TF-IDF index
-#--------------------------------------------------------------------------------------------
-def create_index():
-    return TfidfVectorizer(use_idf=True)
-
-#--------------------------------------------------------------------------------------------
 # Function that reads our Training Data
 #--------------------------------------------------------------------------------------------
 def read_train_data(file_name):
@@ -203,7 +185,7 @@ def read_train_data(file_name):
     # 78.023134% [SVC(C=100, gamma=0.2)]
 
     if coarse:
-        svm_classifier = svm.SVC(kernel='rbf', C=100.0, gamma=1)
+        svm_classifier = svm.SVC(kernel='rbf', C=100.0, gamma=1.0)
     else:
         svm_classifier = svm.SVC(kernel='rbf', C=100.0, gamma=0.2)
 
@@ -212,64 +194,6 @@ def read_train_data(file_name):
     vec = vec_data
     labels = train_set_labels
 
-#--------------------------------------------------------------------------------------------
-# Auxiliary function just to test classifier values
-#--------------------------------------------------------------------------------------------
-#TODO: Remove this afterwards
-def test_classifier_values(dev_set_lines):
-    global vec
-    global labels
-
-    classifiers = []
-    for C in range(70,101,1):
-        for gamma in range(1,11,1):
-            classifiers += [[C, gamma/10], ]
-            print(C, gamma/10)
-
-
-    sol = open('DEV-labels.txt', 'r')
-    temp_sol_lines = sol.readlines()
-    sol.close()
-
-    sol_lines = []
-
-    for line in temp_sol_lines:
-        p_line = re.sub('[\s\x00\\n]','',line)
-        if p_line != '':
-            sol_lines += [p_line,]
-
-    best_accuracy = 0
-    best_accuracy_measures = None
-
-    for classifier in classifiers:
-        out_lines = []
-        n_labels = 0
-        correct_labels = 0
-        clf = svm.SVC(C=classifier[0], gamma=classifier[1])
-        clf.fit(vec, labels)
-
-        for line in dev_set_lines:
-            p_line = [flatten_list(preprocess_line(line.strip()))]
-            test_array = train_vectorizer.transform(p_line)
-            prediction = str(clf.predict(test_array))
-            out_lines += [re.sub('[\[\'\]]','', prediction).rstrip(),]
-
-        for i in range(len(sol_lines)):
-            if re.sub('[\s\x00]','',out_lines[i]) in str(sol_lines[i]):
-                correct_labels += 1
-            n_labels += 1 
-        accuracy = (correct_labels/n_labels)*100
-        print("Current accuracy {:3f}%".format(accuracy))
-        print("Current measures {}".format([clf]))
-
-        if accuracy >= best_accuracy:
-            best_accuracy = accuracy
-            best_accuracy_measures = [clf]
-
-    print("Best accuracy {:3f}%".format(best_accuracy))
-    print("Best measures {}".format(best_accuracy_measures))
-
-    return
 #--------------------------------------------------------------------------------------------
 # Function that generates course labels for each document
 #--------------------------------------------------------------------------------------------
@@ -281,9 +205,6 @@ def generate_c_label(file_name):
 
     global train_vectorizer
     global svm_classifier
-
-    #TODO: Remove this afterwards
-    #test_classifier_values(dev_set_lines)
 
     text_output = ''
     for line in dev_set_lines:
