@@ -12,24 +12,20 @@ import nltk
 #-----------------------------------------------------------------
 # Global Variable Field 
 #-----------------------------------------------------------------
-stop_words_coarse = ['i', 'me', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", 
-"you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'his', 'she', "she's", 
-'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'them', 'their', 'theirs', 'what', 
-"that'll", 'these', 'am', 'is', 'are', 'be', 'been', 
-'has', 'do', 'did', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 
-'because', 'as', 'until', 'of', 'at', 'by', 'for', 'about', 'against', 'into', 'through', 
-'before', 'after', 'above', 'below', 'to', 'from', 'in', 'out', 'on', 'off', 'over', 'under', 
-'again', 'further', 'then', 'once', 'all', 'both', 'few', 
-'more', 'other', 'no', 'same', 'so', 'than', 'very', 's', 't', 
-'can', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', 
-"aren't", 'couldn', "couldn't", 'didn', "didn't", "doesn't", "hadn't", 'hasn', "hasn't", "haven't", 
-"isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", "shan't", "shouldn't", 
-"wasn't", 'weren', "weren't", "won't", 'wouldn', "wouldn't"]
+stop_words_coarse = ['a', 'about', 'above', 'after', 'again', 'against', 'ain', 'all', 'am', 'an', 'and', 'are', 'aren', "aren't", 'as', 'at', 'be',
+                     'because', 'been', 'before', 'below', 'both', 'but', 'by', 'can', 'couldn', "couldn't", 'd', 'did', 'didn', "didn't", 'do', "doesn't", 
+                     'don', "don't", 'few', 'for', 'from', 'further', "hadn't", 'has', 'hasn', "hasn't", "haven't", 'he', 'her', 'hers', 'herself', 'his', 
+                     'i', 'if', 'in', 'into', 'is', "isn't", 'it', "it's", 'its', 'itself', 'just', 'll', 'm', 'ma', 'me', 'mightn', "mightn't", 'more', 
+                     'mustn', "mustn't", 'needn', "needn't", 'no', 'now', 'o', 'of', 'off', 'on', 'once', 'or', 'other', 'our', 'ours', 'ourselves', 'out', 
+                     'over', 're', 's', 'same', "shan't", 'she', "she's", 'should', "should've", "shouldn't", 'so', 't', 'than', "that'll", 'the', 'their', 
+                     'theirs', 'them', 'then', 'these', 'through', 'to', 'under', 'until', 've', 'very', "wasn't", 'we', 'weren', "weren't", 'what', "won't", 
+                     'wouldn', "wouldn't", 'y', 'you', "you'd", "you'll", "you're", "you've", 'your', 'yours', 'yourself', 'yourselves']
 
-stop_words_fine = ['ours', 'ourselves', "you're", "you've", "you'll", "you'd", 'yours', 'yourself', 'yourselves', "she's", 'hers', 'herself', "it's", 
-'theirs', "that'll", 'above', 'below', 'few', "don't", "should've", 'll', 're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 
-"didn't", "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", "haven't", "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 
-"shan't", "shouldn't", "wasn't", 'weren', "weren't", "won't", 'wouldn', "wouldn't"]
+
+stop_words_fine = ['above', 'ain', 'aren', "aren't", 'below', 'couldn', "couldn't", "didn't", "doesn't", "don't", 'few', 'hadn', "hadn't", 'hasn', "hasn't", 
+                   "haven't", 'hers', 'herself', "isn't", "it's", 'll', 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'ours', 'ourselves', 
+                   're', "shan't", "she's", "should've", "shouldn't", "that'll", 'theirs', 've', "wasn't", 'weren', "weren't", "won't", 'wouldn', "wouldn't", 
+                   'y', "you'd", "you'll", "you're", "you've", 'yours', 'yourself', 'yourselves']
 
 coarse = True
 
